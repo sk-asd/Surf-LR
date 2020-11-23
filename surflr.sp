@@ -7,45 +7,46 @@
 #include <smlib>
 #pragma semicolon 1
 #pragma newdecls required
-bool LRatiliyor = false, InLR[MAXPLAYERS] = false, CanFire[MAXPLAYERS] = false; int istekatan = -1, istekgonderilen = -1, bodysayi[MAXPLAYERS] = 0;public Plugin myinfo = {name = "SURF LR", author = "phiso", description = "Surfte lr atmanıza yarar.", version = "1.0", url = "phiso#3331 - https://discord.gg/D3kcQy3BRx - https://pluginmerkezi.com"};
+bool LRatiliyor = false, InLR[MAXPLAYERS] = false, CanFire[MAXPLAYERS] = false; int istekatan = -1, istekgonderilen = -1, bodysayi[MAXPLAYERS] = 0; public Plugin myinfo =  { name = "SURF LR", author = "phiso", description = "Surfte lr atmanıza yarar.", version = "1.0", url = "phiso#3331 - https://discord.gg/D3kcQy3BRx - https://pluginmerkezi.com" };
 public void OnMapStart()
 {
 	char mapismi[128];
 	GetCurrentMap(mapismi, sizeof(mapismi));
-	char EklentiIsmi[128];
-	GetPluginFilename(INVALID_HANDLE, EklentiIsmi, sizeof(EklentiIsmi));
-	if (StrContains(mapismi, "surf", false))
+	if (StrContains(mapismi, "surf_", false))
 	{
-		ServerCommand("sm plugins unload %s", EklentiIsmi);
+		SetFailState("[SURF_LR] Surf haritalarinda calismaktadir");
 	}
-	else
-	{
-		ServerCommand("sm plugins load %s", EklentiIsmi);
-		CreateTimer(180.0, LR_Reklam, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-		AddFileToDownloadsTable("sound/Plugin_Merkezi/Surf_LR/lrsarki.mp3");
-		PrecacheSound("Plugin_Merkezi/Surf_LR/lrsarki.mp3");
-	}
+	CreateTimer(180.0, LR_Reklam, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+	AddFileToDownloadsTable("sound/Plugin_Merkezi/Surf_LR/lrsarki.mp3");
+	PrecacheSound("Plugin_Merkezi/Surf_LR/lrsarki.mp3");
 }
-public Action LR_Reklam(Handle Timer){CPrintToChatAll("{darkred}[pluginmerkezi.com]{lime}!lr yazarak LR atabilirsiniz!");}
+public Action LR_Reklam(Handle Timer) { CPrintToChatAll("{darkred}[pluginmerkezi.com]{lime}!lr yazarak LR atabilirsiniz!"); }
 public void OnPluginStart()
 {
 	HookEvent("player_hurt", hurt);
 	HookEvent("weapon_fire", weaponfire);
 	HookEvent("player_death", Oyuncu_Oldugunde);
-	RegConsoleCmd("sm_lr", menuac); 
+	RegConsoleCmd("sm_lr", menuac);
 }
 public Action menuac(int client, int args)
 {
 	if (!LRatiliyor)
 	{
-		if (IsPlayerAlive(client))
+		if (istekatan == -1)
 		{
-			menu22(client);
-			istekatan = client;
+			if (IsPlayerAlive(client))
+			{
+				menu22(client);
+				istekatan = client;
+			}
+			else
+			{
+				CPrintToChat(client, "{darkred}[pluginmerkezi.com] {darkblue}!lr {default}için {darkblue}yaşıyor {lime}olmalısınız.");
+			}
 		}
 		else
 		{
-			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {darkblue}!lr {default}için {darkblue}yaşıyor {lime}olmalısınız.");
+			CReplyToCommand(client, "{darkred}[pluginmerkezi.com] {darkblue}%N {default}adlı oyuncu lr isteği yolluyor biraz bekle", istekatan);
 		}
 	}
 	else
@@ -58,17 +59,17 @@ public Action menu22(int client)
 {
 	Menu menu = new Menu(MenuCallBack);
 	menu.SetTitle("▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n^-^ Kim ile LR atmak istersin? ^-^\n▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬\n");
-	char sName[MAX_NAME_LENGTH], sUserId[10];
+	char Name[MAX_NAME_LENGTH], UserId[10];
 	for (int i = 1; i <= MaxClients; i++)
 	{
 		if (IsClientInGame(i) && i != client && IsPlayerAlive(i))
 		{
-			GetClientName(i, sName, sizeof(sName));
-			IntToString(GetClientUserId(i), sUserId, sizeof(sUserId));
-			menu.AddItem(sUserId, sName);
+			GetClientName(i, Name, sizeof(Name));
+			IntToString(GetClientUserId(i), UserId, sizeof(UserId));
+			menu.AddItem(UserId, Name);
 		}
 	}
-	menu.Display(client, MENU_TIME_FOREVER);
+	menu.Display(client, 10);
 }
 
 public int MenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
@@ -89,20 +90,24 @@ public int MenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
 			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {lime}Seçtiğiniz kişi {darkred}ölü.");
 		}
 	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
+	}
+	else if (action == MenuAction_Cancel)
+	{
+		if (client == MenuCancel_Exit)
+			istekatan = -1;
+	}
 }
 public Action evethayir(int client)
 {
 	Menu menu = new Menu(MenuCallBack2);
 	menu.SetTitle("%N - Sizinle LR atmak istiyor, LR atmak istiyor musunuz?", istekatan);
-	
-	char opcionmenu[124];
-	
-	Format(opcionmenu, sizeof(opcionmenu), "✓ Evet, istiyorum.");
-	menu.AddItem("option1", opcionmenu);
-	
-	Format(opcionmenu, sizeof(opcionmenu), "✕ Hayır, istemiyorum.");
-	menu.AddItem("option2", opcionmenu);
-
+	menu.AddItem("option1", "✓ Evet, istiyorum.");
+	menu.AddItem("option2", "✕ Hayır, istemiyorum.");
+	menu.ExitBackButton = false;
+	menu.ExitButton = false;
 	menu.Display(client, 15);
 }
 
@@ -153,9 +158,13 @@ public int MenuCallBack2(Menu menu, MenuAction action, int client, int itemNum)
 			CPrintToChat(istekatan, "{darkred}[pluginmerkezi.com]{lime}%N {orange}LR isteğini {darkred}reddetdi.", istekgonderilen);
 			InLR[istekgonderilen] = false;
 			InLR[istekatan] = false;
-			istekgonderilen = 0;
-			istekatan = 0;
+			istekgonderilen = -1;
+			istekatan = -1;
 		}
+	}
+	else if (action == MenuAction_End)
+	{
+		delete menu;
 	}
 }
 public Action weaponfire(Event event, const char[] name, bool dontBroadcast)
@@ -231,7 +240,7 @@ public void ResetLR()
 	istekgonderilen = -1;
 	istekatan = -1;
 }
-public void GiveDeagle(int client){if (IsClientInGame(client)){Client_GiveWeaponAndAmmo(client, "weapon_deagle", _, 0, _, 1);}}
+public void GiveDeagle(int client) { if (IsClientInGame(client)) { Client_GiveWeaponAndAmmo(client, "weapon_deagle", _, 0, _, 1); } }
 public void Zone_OnClientEntry(int client, const char[] zone)
 {
 	if (StrContains(zone, "lrkapi", false) == 0)
@@ -239,9 +248,9 @@ public void Zone_OnClientEntry(int client, const char[] zone)
 		if (LRatiliyor)
 		{
 			float yatak[3];
-			yatak[0] = -5678.90; 
-			yatak[1] = -3198.10; 
-			yatak[2] = 2017.16; 
+			yatak[0] = -5678.90;
+			yatak[1] = -3198.10;
+			yatak[2] = 2017.16;
 			TeleportEntity(client, yatak, NULL_VECTOR, NULL_VECTOR);
 			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {green}Şuanda bir {darkred}LR {green}atıldığı için yatağa {default}ışınlandınız.");
 		}
@@ -254,11 +263,11 @@ public void Zone_OnClientLeave(int client, const char[] zone)
 		if (InLR[client])
 		{
 			float yatak[3];
-			yatak[0] = -5678.90; 
+			yatak[0] = -5678.90;
 			yatak[1] = -3198.10;
 			yatak[2] = 2017.16;
 			TeleportEntity(istekatan, yatak, NULL_VECTOR, NULL_VECTOR);
-			TeleportEntity(istekgonderilen, yatak, NULL_VECTOR, NULL_VECTOR);		
+			TeleportEntity(istekgonderilen, yatak, NULL_VECTOR, NULL_VECTOR);
 			CPrintToChatAll("{darkred}[pluginmerkezi.com]{green}Herhangi {darkred}LR{lime} atan biri{darkred}LR {lime}odasından ayrıldığı için lr iptal edildi.");
 			CreateTimer(1.0, DelayReset);
 		}
@@ -280,16 +289,16 @@ public Action Oyuncu_Oldugunde(Event event, const char[] name, bool dontBroadcas
 			TeleportEntity(istekgonderilen, yatak, NULL_VECTOR, NULL_VECTOR);
 			TeleportEntity(istekatan, yatak, NULL_VECTOR, NULL_VECTOR);
 			CreateTimer(1.0, DelayReset);
-		}		
+		}
 	}
 }
-public Action DelayReset(Handle Timer){ResetLR();}public Action silahsil(Handle Timer, any client){Client_RemoveAllWeapons(client, "", false);}
+public Action DelayReset(Handle Timer) { ResetLR(); } public Action silahsil(Handle Timer, any client) { Client_RemoveAllWeapons(client, "", false); }
 public Action hurt(Handle event, char[] name, bool dontBroadcast)
 {
 	int client = GetClientOfUserId(GetEventInt(event, "userid"));
 	int attacker = GetClientOfUserId(GetEventInt(event, "attacker"));
 	int hitgroup = GetEventInt(event, "hitgroup");
-	if(LRatiliyor)
+	if (LRatiliyor)
 	{
 		int weapon = GetEntPropEnt(client, Prop_Send, "m_hActiveWeapon");
 		char weaponname[256];
@@ -338,15 +347,15 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 				CPrintToChat(attacker, "{darkred}[pluginmerkezi.com]{lime}Şuanda {darkred}LR {lime}atıyorsun, {darkred}LR {lime}atmayan birine vuramazsın.");
 				return Plugin_Changed;
 			}
-		}	
+		}
 	}
 	return Plugin_Continue;
 }
-stock bool IsValidClient(int iClient)
+stock bool IsValidClient(int client)
 {
-	if (iClient <= 0 || iClient > MaxClients || !IsClientInGame(iClient) || IsFakeClient(iClient))
+	if (client <= 0 || client > MaxClients || !IsClientInGame(client) || IsFakeClient(client))
 	{
 		return false;
 	}
 	return true;
-}
+} 
