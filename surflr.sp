@@ -32,21 +32,13 @@ public Action menuac(int client, int args)
 {
 	if (!LRatiliyor)
 	{
-		if (istekatan == -1)
+		if (IsPlayerAlive(client))
 		{
-			if (IsPlayerAlive(client))
-			{
-				menu22(client);
-				istekatan = client;
-			}
-			else
-			{
-				CPrintToChat(client, "{darkred}[pluginmerkezi.com] {darkblue}!lr {default}için {darkblue}yaşıyor {lime}olmalısınız.");
-			}
+			menu22(client);
 		}
 		else
 		{
-			CReplyToCommand(client, "{darkred}[pluginmerkezi.com] {darkblue}%N {default}adlı oyuncu lr isteği yolluyor biraz bekle", istekatan);
+			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {darkblue}!lr {default}için {darkblue}yaşıyor {lime}olmalısınız.");
 		}
 	}
 	else
@@ -69,7 +61,7 @@ public Action menu22(int client)
 			menu.AddItem(UserId, Name);
 		}
 	}
-	menu.Display(client, 10);
+	menu.Display(client, 15);
 }
 
 public int MenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
@@ -82,6 +74,7 @@ public int MenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
 		int target = GetClientOfUserId(StringToInt(info));
 		if (IsPlayerAlive(target))
 		{
+			istekatan = client;
 			istekgonderilen = target;
 			evethayir(target);
 		}
@@ -93,11 +86,6 @@ public int MenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
 	else if (action == MenuAction_End)
 	{
 		delete menu;
-	}
-	else if (action == MenuAction_Cancel)
-	{
-		if (client == MenuCancel_Exit)
-			istekatan = -1;
 	}
 }
 public Action evethayir(int client)
