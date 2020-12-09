@@ -10,17 +10,18 @@
 bool LRatiliyor = false, InLR[MAXPLAYERS] = false, CanFire[MAXPLAYERS] = false; int istekatan = -1, istekgonderilen = -1, bodysayi[MAXPLAYERS] = 0; public Plugin myinfo =  { name = "SURF LR", author = "phiso", description = "Surfte lr atmanıza yarar.", version = "1.0", url = "phiso#3331 - https://discord.gg/D3kcQy3BRx - https://pluginmerkezi.com" };
 public void OnMapStart()
 {
-	char mapismi[128];
+	char mapismi[512];
 	GetCurrentMap(mapismi, sizeof(mapismi));
 	if (StrContains(mapismi, "surf_", false))
 	{
 		SetFailState("[SURF_LR] Surf haritalarinda calismaktadir");
 	}
+	
 	CreateTimer(180.0, LR_Reklam, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
 	AddFileToDownloadsTable("sound/Plugin_Merkezi/Surf_LR/lrsarki.mp3");
 	PrecacheSound("Plugin_Merkezi/Surf_LR/lrsarki.mp3");
 }
-public Action LR_Reklam(Handle Timer) { CPrintToChatAll("{darkred}[pluginmerkezi.com]{lime}!lr yazarak LR atabilirsiniz!"); }
+public Action LR_Reklam(Handle Timer) { CPrintToChatAll("[SM]{lime}!lr yazarak LR atabilirsiniz!"); }
 public void OnPluginStart()
 {
 	HookEvent("player_hurt", hurt);
@@ -38,12 +39,12 @@ public Action menuac(int client, int args)
 		}
 		else
 		{
-			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {darkblue}!lr {default}için {darkblue}yaşıyor {lime}olmalısınız.");
+			CPrintToChat(client, "[SM] {darkblue}!lr {default}için {darkblue}yaşıyor {lime}olmalısınız.");
 		}
 	}
 	else
 	{
-		CPrintToChat(client, "{darkred}[pluginmerkezi.com] {orchid}Şuan {default}bir {orange}LR {green}atılıyor biraz bekle dostum.");
+		CPrintToChat(client, "[SM] {orchid}Şuan {default}bir {orange}LR {green}atılıyor biraz bekle dostum.");
 	}
 }
 
@@ -80,7 +81,7 @@ public int MenuCallBack(Menu menu, MenuAction action, int client, int itemNum)
 		}
 		else
 		{
-			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {lime}Seçtiğiniz kişi {darkred}ölü.");
+			CPrintToChat(client, "[SM] {lime}Seçtiğiniz kişi {darkred}ölü.");
 		}
 	}
 	else if (action == MenuAction_End)
@@ -122,8 +123,8 @@ public int MenuCallBack2(Menu menu, MenuAction action, int client, int itemNum)
 			Client_RemoveAllWeapons(istekatan);
 			Client_RemoveAllWeapons(istekgonderilen);
 			GiveDeagle(istekatan);
-			CPrintToChatAll("{darkred}[pluginmerkezi.com] {orange}%N {darkblue}ile {orange}%N LR atıyor", istekatan, istekgonderilen);
-			CPrintToChatAll("{darkred}[pluginmerkezi.com] {orange}İlk atış hakkı {darkblue}%N'de!", istekatan);
+			CPrintToChatAll("[SM] {orange}%N {darkblue}ile {orange}%N LR atıyor", istekatan, istekgonderilen);
+			CPrintToChatAll("[SM] {orange}İlk atış hakkı {darkblue}%N'de!", istekatan);
 			LRatiliyor = true;
 			InLR[istekgonderilen] = true;
 			InLR[istekatan] = true;
@@ -142,8 +143,8 @@ public int MenuCallBack2(Menu menu, MenuAction action, int client, int itemNum)
 		}
 		else if (strcmp(info, "option2") == 0)
 		{
-			CPrintToChat(istekgonderilen, "{darkred}[pluginmerkezi.com]{orange}LR isteğini {darkred}reddetdin.");
-			CPrintToChat(istekatan, "{darkred}[pluginmerkezi.com]{lime}%N {orange}LR isteğini {darkred}reddetdi.", istekgonderilen);
+			CPrintToChat(istekgonderilen, "[SM]{orange}LR isteğini {darkred}reddetdin.");
+			CPrintToChat(istekatan, "[SM]{lime}%N {orange}LR isteğini {darkred}reddetdi.", istekgonderilen);
 			InLR[istekgonderilen] = false;
 			InLR[istekatan] = false;
 			istekgonderilen = -1;
@@ -153,11 +154,19 @@ public int MenuCallBack2(Menu menu, MenuAction action, int client, int itemNum)
 	else if (action == MenuAction_End)
 	{
 		delete menu;
+		istekatan = -1;
+		istekgonderilen = -1;
+	}
+	else if (action == MenuCancel_Timeout)
+	{
+		delete menu;
+		istekatan = -1;
+		istekgonderilen = -1;
 	}
 }
 public Action weaponfire(Event event, const char[] name, bool dontBroadcast)
 {
-	int client = GetClientOfUserId(GetEventInt(event, "userid"));
+	int client = GetClientOfUserId(event.GetInt("userid"));
 	if (LRatiliyor)
 	{
 		if (IsClientInGame(client))
@@ -194,7 +203,7 @@ public Action weaponfire(Event event, const char[] name, bool dontBroadcast)
 							SetHudTextParams(-1.0, -0.5, 0.5, 255, 0, 0, 255, 2, 1.0, 0.1, 0.2);
 							ShowSyncHudText(istekatan, hHudText, "ATIŞ HAKKI SİZDE !");
 						}
-						CPrintToChatAll("{darkred}[pluginmerkezi.com] {orange}%N {lime}atış hakkını kullandı.", client);
+						CPrintToChatAll("[SM] {orange}%N {lime}atış hakkını kullandı.", client);
 					}
 				}
 				else
@@ -202,7 +211,7 @@ public Action weaponfire(Event event, const char[] name, bool dontBroadcast)
 					if (StrEqual(weaponname, "weapon_deagle", true))
 					{
 						ForcePlayerSuicide(client);
-						CPrintToChatAll("{darkred}[pluginmerkezi.com] {orange}%N {lime}adlı oyuncu {green}sırası gelmeden sıktığı için {lightred}öldürüldü.", client);
+						CPrintToChatAll("[SM] {orange}%N {lime}adlı oyuncu {green}sırası gelmeden sıktığı için {lightred}öldürüldü.", client);
 						ResetLR();
 					}
 				}
@@ -211,7 +220,7 @@ public Action weaponfire(Event event, const char[] name, bool dontBroadcast)
 	}
 	return Plugin_Handled;
 }
-public void ResetLR()
+stock void ResetLR()
 {
 	LRatiliyor = false;
 	for (int i = 1; i <= MaxClients; i++)
@@ -240,7 +249,7 @@ public void Zone_OnClientEntry(int client, const char[] zone)
 			yatak[1] = -3198.10;
 			yatak[2] = 2017.16;
 			TeleportEntity(client, yatak, NULL_VECTOR, NULL_VECTOR);
-			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {green}Şuanda bir {darkred}LR {green}atıldığı için yatağa {default}ışınlandınız.");
+			CPrintToChat(client, "[SM] {green}Şuanda bir {darkred}LR {green}atıldığı için yatağa {default}ışınlandınız.");
 		}
 	}
 }
@@ -256,7 +265,7 @@ public void Zone_OnClientLeave(int client, const char[] zone)
 			yatak[2] = 2017.16;
 			TeleportEntity(istekatan, yatak, NULL_VECTOR, NULL_VECTOR);
 			TeleportEntity(istekgonderilen, yatak, NULL_VECTOR, NULL_VECTOR);
-			CPrintToChatAll("{darkred}[pluginmerkezi.com]{green}Herhangi {darkred}LR{lime} atan biri{darkred}LR {lime}odasından ayrıldığı için lr iptal edildi.");
+			CPrintToChatAll("[SM]{green}Herhangi {darkred}LR{lime} atan biri{darkred}LR {lime}odasından ayrıldığı için lr iptal edildi.");
 			CreateTimer(1.0, DelayReset);
 		}
 	}
@@ -272,8 +281,8 @@ public Action Oyuncu_Oldugunde(Event event, const char[] name, bool dontBroadcas
 			yatak[0] = -5678.90; //x
 			yatak[1] = -3198.10; //y
 			yatak[2] = 2017.16; //z
-			CPrintToChat(client, "{darkred}[pluginmerkezi.com] {lime}LR`yi {darkred}kaybettin :C");
-			CPrintToChatAll("{darkred}[pluginmerkezi.com] {darkred}LR {lime}bitti. {darkred}!lr {green}yazarak {darkred}lr {green}isteği atabilirsiniz.");
+			CPrintToChat(client, "[SM] {lime}LR`yi {darkred}kaybettin :C");
+			CPrintToChatAll("[SM] {darkred}LR {lime}bitti. {darkred}!lr {green}yazarak {darkred}lr {green}isteği atabilirsiniz.");
 			TeleportEntity(istekgonderilen, yatak, NULL_VECTOR, NULL_VECTOR);
 			TeleportEntity(istekatan, yatak, NULL_VECTOR, NULL_VECTOR);
 			CreateTimer(1.0, DelayReset);
@@ -300,7 +309,7 @@ public Action hurt(Handle event, char[] name, bool dontBroadcast)
 			{
 				if (hitgroup == 1)
 				{
-					CPrintToChatAll("{darkred}[pluginmerkezi.com] {orange}%N {lime}adlı oyuncu {green}LR'yi kazandı!", attacker);
+					CPrintToChatAll("[SM] {orange}%N {lime}adlı oyuncu {green}LR'yi kazandı!", attacker);
 				}
 				else
 				{
@@ -308,10 +317,10 @@ public Action hurt(Handle event, char[] name, bool dontBroadcast)
 					if (bodysayi[attacker] > 1)
 					{
 						ForcePlayerSuicide(attacker);
-						CPrintToChatAll("{darkred}[pluginmerkezi.com] {orange}%N {green}2 body attığı için {lightred}öldürüldü.", attacker);
+						CPrintToChatAll("[SM] {orange}%N {green}2 body attığı için {lightred}öldürüldü.", attacker);
 						ResetLR();
 					}
-					CPrintToChatAll("{darkred}[pluginmerkezi.com] {lime}%N {darkred}Body {lime}attı bir kez daha body atarsa {darkred}öldürülecek.", attacker);
+					CPrintToChatAll("[SM] {lime}%N {darkred}Body {lime}attı bir kez daha body atarsa {darkred}öldürülecek.", attacker);
 				}
 			}
 		}
@@ -326,13 +335,13 @@ public Action OnTakeDamage(int victim, int &attacker, int &inflictor, float &dam
 			if (InLR[victim] && !InLR[attacker])
 			{
 				damage = 0.0;
-				CPrintToChat(attacker, "{darkred}[pluginmerkezi.com]{lime}Şuanda {darkred}%N {red}LR {lime}atıyor, {red}LR {lime}atan birine vuramazsın.", victim);
+				CPrintToChat(attacker, "[SM]{lime}Şuanda {darkred}%N {red}LR {lime}atıyor, {red}LR {lime}atan birine vuramazsın.", victim);
 				return Plugin_Changed;
 			}
 			else if (!InLR[victim] && InLR[attacker])
 			{
 				damage = 0.0;
-				CPrintToChat(attacker, "{darkred}[pluginmerkezi.com]{lime}Şuanda {darkred}LR {lime}atıyorsun, {darkred}LR {lime}atmayan birine vuramazsın.");
+				CPrintToChat(attacker, "[SM]{lime}Şuanda {darkred}LR {lime}atıyorsun, {darkred}LR {lime}atmayan birine vuramazsın.");
 				return Plugin_Changed;
 			}
 		}
@@ -346,4 +355,4 @@ stock bool IsValidClient(int client)
 		return false;
 	}
 	return true;
-} 
+}
